@@ -30,8 +30,9 @@ async fn main() -> reqwest::Result<()> {
     // Skip to the "Unreleased" section.
     let mut old = changelog_old.split('\n').peekable();
     while old.next().unwrap() != UNRELEASED_HEADER {}
-    old.next(); // Remove the succeeding newline.
-    old.next(); // Remove the succeeding sub-section header.
+    while old.peek().unwrap().is_empty() || old.peek().unwrap().starts_with("### ") {
+        old.next();
+    }
 
     let mut new = changelog_new.split('\n');
     while new.next().unwrap() != UNRELEASED_HEADER {}
@@ -65,13 +66,8 @@ async fn main() -> reqwest::Result<()> {
             // If the two lines are equal, advance both of them. Also keep advancing the old
             // iterator over empty lines and sub-section headers.
             old.next();
-            loop {
-                let next = old.peek().unwrap();
-                if next.is_empty() || next.starts_with("### ") {
-                    old.next();
-                } else {
-                    break;
-                }
+            while old.peek().unwrap().is_empty() || old.peek().unwrap().starts_with("### ") {
+                old.next();
             }
         }
     }
