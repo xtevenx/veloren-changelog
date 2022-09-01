@@ -128,8 +128,13 @@ impl EventHandler for Handler {
     async fn ready(&self, context: Context, _: Ready) {
         for guild_id in context.cache.guilds() {
             for (_, channel) in guild_id.channels(&context.http).await.unwrap() {
-                if channel.name == "veloren-updates" {
-                    channel.say(&context.http, &self.message).await.unwrap();
+                if channel.name == "veloren-updates"
+                    && channel.say(&context.http, &self.message).await.is_err()
+                {
+                    println!(
+                        "Channel {} in guild {} cannot be written to.",
+                        channel.id, channel.guild_id
+                    );
                 }
             }
         }
