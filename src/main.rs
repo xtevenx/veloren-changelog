@@ -2,12 +2,18 @@ use std::fs;
 use std::io;
 use std::sync::Arc;
 
+use scraper::Html;
+use scraper::Selector;
+
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
 const CHANGELOG_URL: &str = "https://gitlab.com/veloren/veloren/-/raw/nightly/CHANGELOG.md";
+
+const DEVBLOGS_PATH: &str = "DEVBLOGS.md";
+const DEVBLOGS_URL: &str = "https://veloren.net/devblogs/";
 
 const UNRELEASED_HEADER: &str = "## [Unreleased]";
 
@@ -79,6 +85,27 @@ async fn main() -> reqwest::Result<()> {
         }
     }
 
+    // Check for new devblogs.
+    let devblogs_old = match read_devblogs().await {
+        Ok(s) => s,
+        Err(_) => download_devblogs().await?,
+    };
+
+    let devblogs_new = download_devblogs().await?;
+
+    // Exctract only the new devblogs.
+    let old = devblogs_old.split('\n').next().unwrap();
+    let mut new = devblogs_new
+        .split('\n')
+        .take_while(|s| s != &old)
+        .map(|s| "- ".to_string() + s)
+        .collect::<Vec<_>>();
+
+    if !new.is_empty() {
+        changes.push("## Blog post(s)".to_string());
+        changes.append(&mut new);
+    }
+
     // If any changes have occured, message the channel.
     if !changes.is_empty() {
         let discord_token = fs::read_to_string("DISCORD_TOKEN").unwrap();
@@ -107,16 +134,31 @@ async fn main() -> reqwest::Result<()> {
 }
 
 async fn download_changelog() -> reqwest::Result<String> {
-    fs::write(
-        CHANGELOG_PATH,
-        reqwest::get(CHANGELOG_URL).await?.text().await?,
-    )
-    .expect("Unable to write to file.");
-    Ok(read_changelog().await.unwrap())
+    let md = reqwest::get(CHANGELOG_URL).await?.text().await?;
+    fs::write(CHANGELOG_PATH, &md).expect("Unable to write to file.");
+    Ok(md)
 }
 
 async fn read_changelog() -> io::Result<String> {
     fs::read_to_string(CHANGELOG_PATH)
+}
+
+async fn download_devblogs() -> reqwest::Result<String> {
+    let html = reqwest::get(DEVBLOGS_URL).await?.text().await?;
+    let selector = Selector::parse(".header-link").unwrap();
+
+    // Process the html into only the devblog links.
+    let devblogs = Html::parse_document(&html)
+        .select(&selector)
+        .filter_map(|e| e.value().attr("href").map(|s| s.to_string() + "\n"))
+        .collect::<String>();
+
+    fs::write(DEVBLOGS_PATH, &devblogs).expect("Unable to write to file.");
+    Ok(devblogs)
+}
+
+async fn read_devblogs() -> io::Result<String> {
+    fs::read_to_string(DEVBLOGS_PATH)
 }
 
 struct Handler {
