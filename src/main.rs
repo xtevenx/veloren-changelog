@@ -55,11 +55,11 @@ async fn main() -> reqwest::Result<()> {
             // If the line starts a new sub-section while the last sub-section is empty, remove the
             // last sub-section. Then add the new sub-section header.
             if let Some(s) = changes.last() {
-                if s.starts_with("\n**") {
+                if s.starts_with("\n## ") {
                     changes.pop();
                 }
             }
-            changes.push("\n**".to_string() + s + "**")
+            changes.push("\n## ".to_string() + s)
         } else if &line != old.peek().unwrap() {
             // If the new line is not equal to the old line, add it. However, if the line does not
             // start with a bullet point, add it to the previous line.
@@ -80,7 +80,7 @@ async fn main() -> reqwest::Result<()> {
 
     // If the last sub-section is empty, remove the last sub-section.
     if let Some(s) = changes.last() {
-        if s.starts_with("\n**") {
+        if s.starts_with("\n## ") {
             changes.pop();
         }
     }
@@ -114,7 +114,7 @@ async fn main() -> reqwest::Result<()> {
             serenity::model::gateway::GatewayIntents::default(),
         )
         .event_handler(Handler {
-            message: "New Veloren Update!\n".to_string() + &changes.join("\n"),
+            message: "# Veloren News!\n".to_string() + &changes.join("\n"),
         })
         .await
         .expect("Unable to start the bot.");
