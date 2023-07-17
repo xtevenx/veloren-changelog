@@ -10,7 +10,7 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
-const CHANGELOG_URL: &str = "https://gitlab.com/veloren/veloren/-/raw/nightly/CHANGELOG.md";
+const CHANGELOG_URL: &str = "https://gitlab.com/veloren/veloren/-/raw/weekly/CHANGELOG.md";
 
 const DEVBLOGS_PATH: &str = "DEVBLOGS.md";
 const DEVBLOGS_URL: &str = "https://veloren.net/devblogs/";
