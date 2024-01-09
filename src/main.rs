@@ -13,7 +13,7 @@ const CHANGELOG_PATH: &str = "CHANGELOG.md";
 const CHANGELOG_URL: &str = "https://gitlab.com/veloren/veloren/-/raw/weekly/CHANGELOG.md";
 
 const DEVBLOGS_PATH: &str = "DEVBLOGS.md";
-const DEVBLOGS_URL: &str = "https://veloren.net/devblogs/";
+const DEVBLOGS_URL: &str = "https://veloren.net/blog/";
 
 const UNRELEASED_HEADER: &str = "## [Unreleased]";
 
@@ -55,11 +55,11 @@ async fn main() -> reqwest::Result<()> {
             // If the line starts a new sub-section while the last sub-section is empty, remove the
             // last sub-section. Then add the new sub-section header.
             if let Some(s) = changes.last() {
-                if s.starts_with("\n## ") {
+                if s.starts_with("## ") {
                     changes.pop();
                 }
             }
-            changes.push("\n## ".to_string() + s)
+            changes.push("## ".to_string() + s)
         } else if &line != old.peek().unwrap() {
             // If the new line is not equal to the old line, add it. However, if the line does not
             // start with a bullet point, add it to the previous line.
@@ -80,7 +80,7 @@ async fn main() -> reqwest::Result<()> {
 
     // If the last sub-section is empty, remove the last sub-section.
     if let Some(s) = changes.last() {
-        if s.starts_with("\n## ") {
+        if s.starts_with("## ") {
             changes.pop();
         }
     }
